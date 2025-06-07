@@ -1,0 +1,22 @@
+
+.depicter-1-display .depicter-backdrop{
+	background-color:rgba(0,0,0,0.3);
+}
+.depicter-revert .depicter-1-element-4{
+	font-size:13px;
+	text-align:center;
+	color:#FFF;
+	font-family:"Open Sans";
+	font-weight:300;
+	background-color:#4980F5;
+}
+.depicter-revert .depicter-1-element-4 .dp-icon-container{
+	transform:scale(1);
+}
+.depicter-revert .depicter-1-element-4 .dp-disabled{
+	opacity:1;
+}
+.depicter-revert .depicter-1-section-1 .depicter-section-background{
+	background-color:#FFF;
+}
+
