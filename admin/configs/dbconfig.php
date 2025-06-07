@@ -14,3 +14,4 @@ if ($conn->connect_error) {
 }
 echo "<div style='color: green'>Connected successfully</div>";
 ?>
+
