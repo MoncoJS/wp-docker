@@ -1,90 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+session_start();
+include('./configs/dbconfig.php'); // รวมไฟล์ config.php สำหรับการเชื่อมต่อฐานข้อมูล
 
+if (isset($_POST['login'])) {
+    // รับข้อมูลจากฟอร์ม
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    // เปลี่ยนเป็นค้นหาด้วย user_login และตรวจสอบกับ user_nicename
+    $sql = "SELECT ID, user_login, user_nicename FROM wp_users WHERE user_login = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username); // Bind username
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        // หากพบผู้ใช้ในฐานข้อมูล
+        $user = $result->fetch_assoc();
+
+        // Debug information
+        echo "<pre>";
+        echo "Login attempt:<br>";
+        echo "Username: " . $username . "<br>";
+        echo "Password: " . $password . "<br>";
+        echo "Stored nicename: " . $user['user_nicename'] . "<br>";
+        echo "</pre>";
+
+        // ตรวจสอบรหัสผ่านกับ user_nicename แทน
+        if ($password === $user['user_nicename']) {
+            // หากรหัสผ่านถูกต้อง
+            $_SESSION['user_id'] = $user['ID']; // เก็บข้อมูลผู้ใช้ใน session
+            $_SESSION['user_login'] = $user['user_login'];
+
+            // ส่งผู้ใช้ไปยังหน้าหลัก
+            header('Location: dashboard.php');
+            exit();
+        }
+    }
+    $error = "Invalid username or password";
+}
+?>
+
+<!DOCTYPE html>
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WordPress Admin Database Test</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f5f5f5;
-        }
-
-        .login-container {
-            max-width: 400px;
-            margin: 50px auto;
-        }
-    </style>
+    <title>Login</title>
 </head>
-
 <body>
-    <div class="container">
-        <div class="login-container">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">Admin Login</h3>
-                </div>
-                <div class="card-body">
-                    <?php
-                    include 'configs/dbconfig.php';
-
-                    $message = '';
-
-                    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_login']) && isset($_POST['user_pass'])) {
-                        $sql = "SELECT * FROM wp_users WHERE user_login = ?";
-                        $stmt = $conn->prepare($sql);
-                        $stmt->bind_param("s", $_POST['user_login']);
-                        $stmt->execute();
-                        $result = $stmt->get_result();
-
-                        if ($result->num_rows > 0) {
-                            $user = $result->fetch_assoc();
-                            // ใช้ password_verify ตรวจสอบรหัสผ่าน
-                            $stored_hash = str_replace('$wp$', '$2y$', $user['user_pass']);
-                            if (password_verify($_POST['user_pass'], $stored_hash)) {
-                                $message = '<div class="alert alert-success">เข้าสู่ระบบสำเร็จ!</div>';
-                            } else {
-                                $message = '<div class="alert alert-danger">รหัสผ่านไม่ถูกต้อง</div>';
-                            }
-                        } else {
-                            $message = '<div class="alert alert-danger">ไม่พบชื่อผู้ใช้นี้</div>';
-                        }
-                        $stmt->close();
-                    }
-                    ?>
-
-                    <?php if ($message): ?>
-                        <?php echo $message; ?>
-                    <?php endif; ?>
-
-                    <form action="" method="post">
-                        <div class="mb-3">
-                            <label for="user_login" class="form-label">ชื่อผู้ใช้</label>
-                            <input type="text" name="user_login" id="user_login" placeholder="กรอกชื่อผู้ใช้"
-                                class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="user_pass" class="form-label">รหัสผ่าน</label>
-                            <input type="password" name="user_pass" id="user_pass" placeholder="กรอกรหัสผ่าน"
-                                class="form-control" required>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-block">เข้าสู่ระบบ</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-        crossorigin="anonymous"></script>
+    <h2>เข้าสู่ระบบ</h2>
+    <?php if (isset($error)): ?>
+        <div style="color: red;"><?php echo $error; ?></div>
+    <?php endif; ?>
+    <form method="POST" action="">
+        <label for="username">ชื่อผู้ใช้:</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <label for="password">รหัสผ่าน:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <button type="submit" name="login">Login</button>
+    </form>
 </body>
-
 </html>
