@@ -18,8 +18,6 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-    <?php renderNavbar(); ?>
-    
     <div class="dashboard-container">
         <div class="dashboard-header">
             <h1>แผงควบคุม</h1>

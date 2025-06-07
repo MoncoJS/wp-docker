@@ -17,68 +17,82 @@ $username = $_SESSION['username'] ?? 'ผู้ใช้';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>หน้าหลัก</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <style>
         body {
             font-family: 'Kanit', sans-serif;
-            margin: 0;
-            background: #f7fafc;
-        }
-        .navbar {
-            background: #2d3748;
-            padding: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .nav-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            transition: all 0.3s;
-        }
-        .nav-links a:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        .welcome-text {
-            color: #e2e8f0;
-        }
-        .content {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        h1 {
-            color: #2d3748;
-            margin-top: 0;
         }
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <div class="nav-content">
-            <div class="nav-links">
-                <a href="#">หน้าหลัก</a>
-                <a href="#">จัดการข้อมูล</a>
-                <a href="#">รายงาน</a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active menu-link" href="#" data-page="home">หน้าหลัก</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#" data-page="dashboard">แผงควบคุม</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#" data-page="saline">ระบบเบิกน้ำเกลือ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#" data-page="equipment">ระบบยืมคืนเครื่องมือแพทย์</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#" data-page="reports">รายงาน</a>
+                    </li>
+                </ul>
+                <span class="navbar-text">
+                    ยินดีต้อนรับ <?php echo htmlspecialchars($username); ?> | 
+                    <a href="logout.php" class="text-danger text-decoration-none">ออกจากระบบ</a>
+                </span>
             </div>
-            <div class="welcome-text">
-                ยินดีต้อนรับ <?php echo htmlspecialchars($username); ?> | 
-                <a href="logout.php" style="color: #fc8181;">ออกจากระบบ</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div id="content-area">
+            <!-- Content will be loaded here -->
+            <div class="text-center">
+                <h2>ยินดีต้อนรับเข้าสู่ระบบ</h2>
+                <p>กรุณาเลือกเมนูที่ต้องการใช้งาน</p>
             </div>
         </div>
     </div>
-    <div class="content">
-        <h1>ระบบจัดการ</h1>
-        <p>คุณได้เข้าสู่ระบบในชื่อ <?php echo htmlspecialchars($username); ?></p>
-    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        $('.menu-link').click(function(e) {
+            e.preventDefault();
+            
+            $('.menu-link').removeClass('active');
+            $(this).addClass('active');
+            
+            var page = $(this).data('page');
+            loadContent(page);
+        });
+
+        function loadContent(page) {
+            $.ajax({
+                url: 'pages/' + page + '.php',
+                method: 'GET',
+                success: function(response) {
+                    $('#content-area').html(response);
+                },
+                error: function() {
+                    $('#content-area').html('<div class="alert alert-danger">ไม่พบหน้าที่ต้องการ</div>');
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>
