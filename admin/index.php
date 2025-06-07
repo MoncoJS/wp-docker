@@ -48,6 +48,9 @@ $username = $_SESSION['username'] ?? 'ผู้ใช้';
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="#" data-page="reports">รายงาน</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link menu-link" href="#" data-page="employees">จัดการพนักงาน</a>
+                    </li>
                 </ul>
                 <span class="navbar-text">
                     ยินดีต้อนรับ <?php echo htmlspecialchars($username); ?> | 
