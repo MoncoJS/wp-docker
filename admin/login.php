@@ -1,39 +1,25 @@
 <?php
-ob_start(); // เริ่ม output buffering
 session_start();
-
-// เช็ค session ก่อน
-if (isset($_SESSION['user_id'])) {
-    header("Location: index.php");
-    exit();
-}
-
 require_once('configs/dbconfig.php');
 
-// ตรวจสอบการ submit form
-if($_SERVER['REQUEST_METHOD'] == 'POST') {
+// Clear any output buffering
+ob_clean();
+
+if (isset($_POST['username']) && isset($_POST['password'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
     
-    $sql = "SELECT ID, user_login, user_nicename FROM wp_users WHERE user_login = ?";
+    $sql = "SELECT * FROM wp_users WHERE user_login = ? LIMIT 1";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $username);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $user = $stmt->get_result()->fetch_assoc();
     
-    if ($result->num_rows == 1) {
-        $user = $result->fetch_assoc();
-        // ตรวจสอบรหัสผ่านกับ user_nicename
-        if ($password == $user['user_nicename']) {
-            // ย้าย session handling มาไว้ก่อนที่จะมี output ใดๆ
-            session_regenerate_id(true);
-            $_SESSION['user_id'] = $user['ID'];
-            $_SESSION['username'] = $user['user_login'];
-            
-            // ใช้ absolute URL
-            header("Location: index.php");
-            exit();
-        }
+    if ($user && $password === $user['user_nicename']) {
+        $_SESSION['user_id'] = $user['ID'];
+        $_SESSION['username'] = $user['user_login'];
+        header("Location: index.php");
+        exit();
     }
     $error = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
 }
@@ -44,44 +30,75 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เข้าสู่ระบบ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: sans-serif;
-            background-color: #f5f5f5;
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             margin: 0;
-            padding: 20px;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .login-box {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            width: 100%;
             max-width: 400px;
-            margin: 50px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        h2 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
         }
         input {
             width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.3s;
+            outline: none;
+            font-family: 'Kanit', sans-serif;
+        }
+        input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
         button {
             width: 100%;
-            padding: 10px;
-            background: #4CAF50;
+            padding: 0.75rem;
+            background: #667eea;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 1.1rem;
             cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Kanit', sans-serif;
+        }
+        button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
         }
         .error {
-            color: red;
-            margin-bottom: 10px;
+            background: #fff5f5;
+            color: #c53030;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
         }
     </style>
 </head>
@@ -94,11 +111,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         <form method="POST">
             <div class="form-group">
                 <label>ชื่อผู้ใช้</label>
-                <input type="text" name="username" required>
+                <input type="text" name="username" required placeholder="กรอกชื่อผู้ใช้">
             </div>
             <div class="form-group">
                 <label>รหัสผ่าน</label>
-                <input type="password" name="password" required>
+                <input type="password" name="password" required placeholder="กรอกรหัสผ่าน">
             </div>
             <button type="submit">เข้าสู่ระบบ</button>
         </form>
