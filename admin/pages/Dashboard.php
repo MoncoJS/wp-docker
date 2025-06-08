@@ -1,3 +1,16 @@
+<?php
+require_once('../includes/auth.php');
+checkAuth();
+
+// Get saline inventory count
+$saline_sql = "SELECT COUNT(*) as total FROM saline_inventory WHERE expiry_date > CURRENT_DATE";
+$saline_count = $conn->query($saline_sql)->fetch_assoc();
+
+// Get equipment count
+$equipment_sql = "SELECT COUNT(*) as total FROM equipment_loans WHERE status = 'borrowed'";
+$equipment_count = $conn->query($equipment_sql)->fetch_assoc();
+?>
+
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card border-left-primary shadow h-100 py-2">
@@ -6,7 +19,7 @@
                     <div class="col mr-2">
                         <div class="text-xs fw-bold text-primary text-uppercase mb-1">
                             น้ำเกลือคงเหลือ</div>
-                        <div class="h5 mb-0 fw-bold">500 ขวด</div>
+                        <div class="h5 mb-0 fw-bold"><?php echo $saline_count['total']; ?> ขวด</div>
                     </div>
                 </div>
             </div>
@@ -20,7 +33,7 @@
                     <div class="col mr-2">
                         <div class="text-xs fw-bold text-success text-uppercase mb-1">
                             เครื่องมือแพทย์ที่ถูกยืม</div>
-                        <div class="h5 mb-0 fw-bold">15 รายการ</div>
+                        <div class="h5 mb-0 fw-bold"><?php echo $equipment_count['total']; ?> รายการ</div>
                     </div>
                 </div>
             </div>
@@ -44,18 +57,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>2023-12-25</td>
-                        <td>เบิกน้ำเกลือ 10 ขวด</td>
-                        <td>นางสาวสมศรี</td>
-                        <td><span class="badge bg-success">สำเร็จ</span></td>
-                    </tr>
-                    <tr>
-                        <td>2023-12-24</td>
-                        <td>ยืมเครื่องวัดความดัน</td>
-                        <td>นายสมชาย</td>
-                        <td><span class="badge bg-warning">รอคืน</span></td>
-                    </tr>
+                    <?php while($row = $activities_result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?php echo date('Y-m-d H:i', strtotime($row['date'])); ?></td>
+                            <td><?php echo htmlspecialchars($row['description']); ?></td>
+                            <td><?php echo htmlspecialchars($row['user']); ?></td>
+                            <td><span class="badge bg-<?php echo getStatusBadge($row['status']); ?>">
+                                <?php echo getStatusText($row['status']); ?>
+                            </span></td>
+                        </tr>
+                    <?php endwhile; ?>
                 </tbody>
             </table>
         </div>

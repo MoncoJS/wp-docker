@@ -9,19 +9,55 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
     
-    $sql = "SELECT * FROM wp_users WHERE user_login = ? LIMIT 1";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $username);
-    $stmt->execute();
-    $user = $stmt->get_result()->fetch_assoc();
+    // Try employee login
+    $emp_sql = "SELECT * FROM employees WHERE email = ? AND status = 'active'";
+    $emp_stmt = $conn->prepare($emp_sql);
+    $emp_stmt->bind_param("s", $username);
+    $emp_stmt->execute();
+    $employee = $emp_stmt->get_result()->fetch_assoc();
     
-    if ($user && $password === $user['user_nicename']) {
-        $_SESSION['user_id'] = $user['ID'];
-        $_SESSION['username'] = $user['user_login'];
+    if ($employee && $employee['phone'] === $password) {
+        // Get department info
+        $dept_sql = "SELECT dept_code, dept_name FROM departments WHERE id = ?";
+        $dept_stmt = $conn->prepare($dept_sql);
+        $dept_stmt->bind_param("i", $employee['dept_id']);
+        $dept_stmt->execute();
+        $dept = $dept_stmt->get_result()->fetch_assoc();
+
+        $_SESSION['user_id'] = 'emp_' . $employee['id'];
+        $_SESSION['emp_id'] = $employee['emp_id'];
+        $_SESSION['email'] = $employee['email'];
+        $_SESSION['firstname'] = $employee['firstname']; 
+        $_SESSION['lastname'] = $employee['lastname'];
+        $_SESSION['dept_id'] = $employee['dept_id'];
+        $_SESSION['dept_code'] = $dept['dept_code'];
+        $_SESSION['department'] = $dept['dept_name'];
+        $_SESSION['display_name'] = $employee['firstname'] . ' ' . $employee['lastname'];
+
+        // Update last login
+        $conn->query("UPDATE employees SET last_login = NOW() WHERE id = {$employee['id']}");
+        header("Location: index.php");
+        exit();
+    } 
+    // Try wp_users login next
+    $wp_sql = "SELECT * FROM wp_users WHERE user_login = ? OR user_email = ?";
+    $wp_stmt = $conn->prepare($wp_sql);
+    $wp_stmt->bind_param("ss", $username, $username);
+    $wp_stmt->execute();
+    $wp_user = $wp_stmt->get_result()->fetch_assoc();
+    
+    if ($wp_user && $password === $wp_user['user_nicename']) {
+        $_SESSION['user_id'] = 'wp_' . $wp_user['ID'];
+        $_SESSION['username'] = $wp_user['user_login']; 
+        $_SESSION['display_name'] = $wp_user['display_name'];
+        $_SESSION['email'] = $wp_user['user_email'];
+        $_SESSION['department'] = 'สมาชิกเว็บไซต์';
+
         header("Location: index.php");
         exit();
     }
-    $error = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+    
+    $error = "อีเมล/ชื่อผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง";
 }
 ?>
 <!DOCTYPE html>
@@ -110,12 +146,12 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
         <?php endif; ?>
         <form method="POST">
             <div class="form-group">
-                <label>ชื่อผู้ใช้</label>
-                <input type="text" name="username" required placeholder="กรอกชื่อผู้ใช้">
+                <label>ชื่อผู้ใช้ / อีเมล</label>
+                <input type="text" name="username" required placeholder="กรอกชื่อผู้ใช้หรืออีเมล">
             </div>
             <div class="form-group">
-                <label>รหัสผ่าน</label>
-                <input type="password" name="password" required placeholder="กรอกรหัสผ่าน">
+                <label>รหัสผ่าน / เบอร์โทรศัพท์</label>
+                <input type="password" name="password" required placeholder="กรอกรหัสผ่านหรือเบอร์โทรศัพท์">
             </div>
             <button type="submit">เข้าสู่ระบบ</button>
         </form>
